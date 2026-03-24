@@ -1,0 +1,58 @@
+-- ************************************************************
+-- Project: Healthcare Appointment Management System
+-- Focus: Digital Health Data Modeling and Scheduling
+-- ************************************************************
+
+-- 1. Patients Table
+-- Stores sensitive personal and medical identifier data.
+CREATE TABLE Patients (
+    patient_id INT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    date_of_birth DATE,
+    phone VARCHAR(20) UNIQUE
+);
+
+-- 2. Doctors Table
+-- Manages medical staff and their specialties.
+CREATE TABLE Doctors (
+    doctor_id INT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    specialty VARCHAR(100),
+    contact_email VARCHAR(100)
+);
+
+-- 3. Appointments Table
+-- The core transactional table linking patients, doctors, and time slots.
+CREATE TABLE Appointments (
+    appointment_id INT PRIMARY KEY,
+    patient_id INT,
+    doctor_id INT,
+    appointment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reason VARCHAR(255),
+    appointment_status VARCHAR(20) CHECK (appointment_status IN ('Scheduled', 'Completed', 'Cancelled')),
+    FOREIGN KEY (patient_id) REFERENCES Patients(patient_id),
+    FOREIGN KEY (doctor_id) REFERENCES Doctors(doctor_id)
+);
+
+-- ************************************************************
+-- Example Operational SQL Queries
+-- ************************************************************
+
+-- Query A: List today's scheduled appointments for a specific doctor
+-- Simulates the daily dashboard for medical staff.
+SELECT p.first_name AS Patient_First, p.last_name AS Patient_Last, 
+       a.appointment_date, a.reason
+FROM Appointments a
+JOIN Patients p ON a.patient_id = p.patient_id
+WHERE a.doctor_id = 101 -- Example Doctor ID
+AND a.appointment_status = 'Scheduled'
+AND DATE(a.appointment_date) = CURRENT_DATE;
+
+-- Query B: Find patients who cancelled their appointments
+-- For audit and follow-up purposes.
+SELECT DISTINCT p.first_name, p.last_name, p.phone
+FROM Patients p
+JOIN Appointments a ON p.patient_id = a.patient_id
+WHERE a.appointment_status = 'Cancelled';
